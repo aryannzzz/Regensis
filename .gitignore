@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data & large artifacts — never commit raw data
+data/raw/
+data/*.mat
+data/*.fif
+data/*.edf
+*.npz
+*.npy
+
+# Results caches (keep the small deliverables, not intermediate cache)
+results/*/cache/
+
+# Environment / secrets
+.env
+*.lock.local
+
+# OS / editor
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
