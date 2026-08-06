@@ -1,0 +1,15 @@
+# DRAFT — placeholders pending prereg/PR-2026-01.md sign-off. Do not run.
+data:
+  loader: data.bci_iv_2a
+  version_hash: null        # from data.sha256 once loaded
+preprocessing:
+  band_pass_hz: null        # TODO: from source paper (Dev A)
+  epoch_window_s: null      # TODO: from source paper (Dev A)
+features:
+  family: null               # csp | riemann — TODO: matches source paper
+  n_components: null
+decoder:
+  classifier: slda
+split:
+  policy: session_wise       # eval/splits.py — BLOCKED, not yet on track-a
+seed: null
