@@ -28,3 +28,8 @@ results/*/cache/
 !.vscode/settings.json
 .DS_Store
 Thumbs.db
+
+# Ignore raw dataset files
+data/raw/
+*.gdf
+*.mat
