@@ -33,3 +33,5 @@ Thumbs.db
 data/raw/
 *.gdf
 *.mat
+
+ForLearning/eeg_signal_learning.py
