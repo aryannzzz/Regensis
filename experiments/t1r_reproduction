@@ -1,15 +1,59 @@
-# DRAFT — placeholders pending prereg/PR-2026-01.md sign-off. Do not run.
+# experiments/t1r_reproduction.yaml
+# T1-R orchestration config (§5.1, §8.6: config-as-code, committed before run).
+#
+# Fields marked TODO(PR-2026-01) must come from the signed pre-registration
+# (Developer A's Phase 0 extraction of the source paper's conditions) before
+# this config is considered final. Band edges are fixed by the manual
+# itself (§5.1, §6.2: "Band-pass 8-30 Hz") and are NOT paper-dependent.
+
+pre_registration_id: PR-2026-01
+
 data:
   loader: data.bci_iv_2a
-  version_hash: null        # from data.sha256 once loaded
+  data_dir: null              # TODO: local path to BCI-IV-2a files
+  subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  version_hash: null          # filled at run time from data.compute_dataset_hash
+
 preprocessing:
-  band_pass_hz: null        # TODO: from source paper (Dev A)
-  epoch_window_s: null      # TODO: from source paper (Dev A)
+  band_pass_hz: [8, 30]       # fixed by the manual (§5.1, §6.2) — not paper-dependent
+  filter_order: null          # TODO(Dev A): eeg_filters.py's chosen order, logged explicitly
+  epoch_window_s: null        # TODO(PR-2026-01): source paper's timing, exact
+  baseline_window_s: null     # TODO(PR-2026-01): source paper's baseline, exact
+
 features:
-  family: null               # csp | riemann — TODO: matches source paper
-  n_components: null
+  family: csp                 # csp | riemann — TODO(PR-2026-01): matches source paper
+  csp:
+    n_components: 4
+    reg: ledoit_wolf
+  riemann:
+    cov_estimator: oas
+
 decoder:
   classifier: slda
+  lda_shrinkage: auto
+
 split:
-  policy: session_wise       # eval/splits.py — BLOCKED, not yet on track-a
-seed: null
+  policy: session_wise        # BCI-IV-2a provides sessions -> session_wise per eval/splits.py
+
+evaluation:
+  n_bootstrap_resamples: 1000 # floor per §5.1, eval/stats.bootstrap_ci enforces this
+  n_surrogates: 1000          # label-shuffle draws for the permutation test
+  ci_percent: 95.0
+
+published_reference:
+  # TODO(PR-2026-01): the source paper's per-subject (or aggregate) published
+  # accuracy, entered once Developer A has located and documented it.
+  # Structure: {subject_id: accuracy}. Used only for Figure T1-R.1 and the
+  # delta report — never for anything upstream of it.
+  source_citation: null
+  per_subject_accuracy: {}
+
+seed: 42
+
+logging:
+  level: INFO
+  out_dir: results/PR-2026-01/logs
+
+outputs:
+  raw_dir: results/PR-2026-01/raw
+  figure_path: results/PR-2026-01/figure.png

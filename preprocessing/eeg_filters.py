@@ -3,31 +3,54 @@ preprocessing/eeg_filters.py
 
 Band-pass filtering for continuous EEG, applied before epoching.
 Per prereg/PR-2026-01.md: 8-30 Hz, matching the source paper's band.
+
+PATCH NOTE (for Developer A, from the run_t1r.py integration pass):
+  1. Default `picks` looked for the 'EEG:' (colon) prefix, copied from
+     the 2b filter. bci_iv_2a.py's own docstring documents 2a's real
+     channel names as 'EEG-C3' etc. (hyphen) -- confirmed by running
+     this against a synthetic Raw built with 2a's documented naming;
+     the original crashed with "No appropriate channels found for the
+     given picks ([])" before ever reaching epoching. Fixed by
+     importing bci_iv_2a.EEG_CHANNEL_PREFIX directly so the two files
+     can't drift out of sync again.
+  2. Added an explicit `order` parameter (default 4, forward-backward
+     Butterworth via MNE's iir_params) so filter order is a real,
+     loggable value per §8.4, instead of an unparameterized MNE
+     default that a reviewer can't recover from the log.
 """
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
 import mne
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from data.bci_iv_2a import EEG_CHANNEL_PREFIX
 
 
 def bandpass_filter(
     raw: mne.io.BaseRaw,
     low: float = 8.0,
     high: float = 30.0,
-    picks: list[str] | None = None,
+    order: int = 4,
+    picks: list | None = None,
 ) -> mne.io.BaseRaw:
     """
-    Apply a band-pass filter to continuous EEG data.
-
     Args:
-        raw: mne Raw object (e.g. from bci_iv_2b.load_subject's
-             raw_by_session values). Modified via .copy(), original
-             is untouched.
+        raw: mne Raw object. Modified via .copy(), original untouched.
         low: low cutoff frequency in Hz (default 8.0, per prereg)
         high: high cutoff frequency in Hz (default 30.0, per prereg)
-        picks: channel names to filter. Defaults to EEG channels only
-               (C3, Cz, C4) -- EOG channels are excluded per the
-               dataset card, since they're not used for classification.
+        order: Butterworth filter order, forward-backward (filtfilt),
+            so effective attenuation is steeper than `order` alone
+            suggests -- log the passed value, not the effective one,
+            since that's what was configured (§8.4).
+        picks: channel names to filter. Defaults to this dataset's EEG
+            channels (excludes EOG), using the single source of truth
+            in data.bci_iv_2a.EEG_CHANNEL_PREFIX rather than a
+            hardcoded prefix that can silently drift out of sync with
+            the loader.
 
     Returns:
         A new Raw object, band-pass filtered, EEG channels only if
@@ -36,8 +59,14 @@ def bandpass_filter(
     filtered = raw.copy()
 
     if picks is None:
-        # This dataset's EEG channels are named 'EEG:C3', 'EEG:Cz', 'EEG:C4'
-        picks = [ch for ch in filtered.ch_names if ch.startswith("EEG:")]
+        picks = [ch for ch in filtered.ch_names if ch.startswith(EEG_CHANNEL_PREFIX)]
+        if not picks:
+            raise ValueError(
+                f"No channels matched prefix '{EEG_CHANNEL_PREFIX}' in "
+                f"{filtered.ch_names}. Channel naming convention may "
+                f"have changed -- check data/bci_iv_2a.py before "
+                f"silently filtering zero channels."
+            )
 
     filtered.pick(picks)
     filtered.filter(
@@ -45,24 +74,7 @@ def bandpass_filter(
         h_freq=high,
         picks=picks,
         method="iir",
+        iir_params=dict(order=order, ftype="butter"),
         verbose=False,
     )
     return filtered
-
-
-if __name__ == "__main__":
-    import sys
-    from pathlib import Path
-
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-    from data.bci_iv_2b import load_subject
-
-    data_dir = Path("data/raw/bci_iv_2b")
-    subj = load_subject(data_dir, subject_num=1)
-
-    raw = subj.raw_by_session["01T"]
-    print(f"Before filtering: {raw.ch_names}, {raw.info['sfreq']} Hz")
-
-    filtered = bandpass_filter(raw)
-    print(f"After filtering: {filtered.ch_names}")
-    print(f"Filter applied: {filtered.info['highpass']}-{filtered.info['lowpass']} Hz")
