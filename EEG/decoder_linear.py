@@ -10,7 +10,7 @@ from sklearn.pipeline import Pipeline
 
 @dataclass
 class CSPsLDAConfig:
-    n_components: int = 4          # set from prereg once signed
+    n_components: int = 4        # set from prereg once signed
     lda_shrinkage: str | float = "auto"
     reg: str | None = None         # CSP regularization method
 
@@ -26,3 +26,4 @@ def fit_predict_fold(pipeline: Pipeline, X_train, y_train, X_test, y_test):
     this function never generates its own split."""
     pipeline.fit(X_train, y_train)
     return pipeline.predict(X_test), pipeline.decision_function(X_test)
+
