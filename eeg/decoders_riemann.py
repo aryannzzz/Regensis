@@ -7,7 +7,7 @@ it says nothing about decoding accuracy on real EEG and must never be
 cited as a result (§0.3: results live in results/PR-YYYY-NN/, not here).
 """
 import numpy as np
-from eeg.decoders_riemann import RiemannConfig, build_pipeline, fit_predict_fold, tangent_space_components
+#from eeg.decoders_riemann import RiemannConfig, build_pipeline, fit_predict_fold, tangent_space_components
 
 
 def make_synthetic_epochs(n_epochs=40, n_channels=8, n_times=250, seed=0):
