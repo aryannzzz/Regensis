@@ -1,0 +1,58 @@
+# experiments/t1r_reproduction_riemann.yaml
+# Same as t1r_reproduction.yaml, with features.family set to 'riemann'.
+# Use this when the source paper's feature family (per the signed
+# prereg/PR-2026-01.md) is Riemannian tangent-space rather than CSP.
+# Every other field carries the same TODO(PR-2026-01) status as the base
+# config — this file does not resolve any of those, it only picks the
+# decoder.
+
+pre_registration_id: PR-2026-01
+
+data:
+  loader: data.bci_iv_2a
+  data_dir: null              # TODO: local path to BCI-IV-2a files
+  subjects: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  version_hash: null          # filled at run time from data.compute_dataset_hash
+
+preprocessing:
+  band_pass_hz: [8, 30]       # fixed by the manual (§5.1, §6.2) — not paper-dependent
+  filter_order: null          # TODO(Dev A): eeg_filters.py's chosen order, logged explicitly
+  epoch_window_s: null        # TODO(PR-2026-01): source paper's timing, exact
+  baseline_window_s: null     # TODO(PR-2026-01): source paper's baseline, exact
+
+features:
+  family: riemann             # <-- the only substantive difference from the base config
+  csp:
+    n_components: 4
+    reg: ledoit_wolf
+  riemann:
+    cov_estimator: oas        # shrinkage covariance estimator (pyriemann.estimation.Covariances)
+
+decoder:
+  classifier: slda
+  lda_shrinkage: auto
+
+split:
+  policy: session_wise        # BCI-IV-2a provides sessions -> session_wise per eval/splits.py
+
+evaluation:
+  n_bootstrap_resamples: 1000 # floor per §5.1, eval/stats.bootstrap_ci enforces this
+  n_surrogates: 1000          # label-shuffle draws for the permutation test
+  ci_percent: 95.0
+
+published_reference:
+  # TODO(PR-2026-01): the source paper's per-subject (or aggregate) published
+  # accuracy. Structure: {subject_id: accuracy}. Used only for Figure T1-R.1
+  # and the delta report — never for anything upstream of it.
+  source_citation: null
+  per_subject_accuracy: {}
+
+seed: 42
+
+logging:
+  level: INFO
+  out_dir: results/PR-2026-01-riemann/logs
+
+outputs:
+  raw_dir: results/PR-2026-01-riemann/raw
+  figure_path: results/PR-2026-01-riemann/figure.png
