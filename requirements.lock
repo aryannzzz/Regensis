@@ -1,0 +1,10 @@
+# Direct, CPU-only environment used for the validated run (Python 3.12.3).
+numpy==1.26.4
+scipy==1.11.4
+pandas==2.2.3
+scikit-learn==1.5.2
+matplotlib==3.6.3
+seaborn==0.13.2
+PyYAML==6.0.1
+pytest==7.4.4
+

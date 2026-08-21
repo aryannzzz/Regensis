@@ -1,0 +1,72 @@
+name: extended
+output_dir: results/extended
+seeds:
+  start: 30000
+  count: 100
+null_calibration_seeds:
+  start: 40000
+  count: 100
+
+exact:
+  sample_sizes: [50, 100, 200, 328, 500, 1000, 2500]
+
+dimension_benchmark:
+  dimensions: [1, 2, 4, 8, 16, 32]
+  sample_size: 5000
+  k_fraction: 0.05
+
+sample_size_benchmark:
+  sample_sizes: [100, 200, 328, 500, 1000, 2500, 5000]
+  worlds: ["null", genuine_cortical, artifact_only, cortical_plus_artifact]
+  window: post
+  n_subjects: 1
+
+causal:
+  seeds:
+    start: 31000
+    count: 20
+  worlds: ["null", redundant, genuine_cortical, artifact_only, cortical_plus_artifact]
+  windows: [pre, post]
+  generator:
+    target_name: intended_grasp_type
+    n_grasp_types: 4
+    n_subjects: 12
+    trials_per_subject: 1000
+    blocks_per_subject: 10
+    eeg_channels: 64
+    emg_channels: 12
+    band_labels: [low, mu, beta, high]
+    mode: stress
+    mild_class_imbalance: 0.15
+    block_drift_scale: 0.10
+    subject_variability_scale: 0.08
+    default_proxy_quality: 0.7
+  oracle:
+    precision_bits: 0.001
+    min_samples: 50000
+    max_samples: 300000
+    batch_size: 25000
+  decoder:
+    outer_splits: 5
+    inner_splits: 4
+    c_grid: [0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0]
+  direct_eeg_dimensions: 24
+  direct_emg_dimensions: 12
+  mixed_k_fraction: 0.04
+
+controls:
+  honesty_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  degradation_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  proxy_worlds: [artifact_only, cortical_plus_artifact]
+  richness_worlds: [redundant, cortical_plus_artifact]
+  montage_band_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  surrogate_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  default_proxy_quality: 0.7
+  degradation_levels: [1.0, 0.75, 0.5, 0.25, 0.0]
+  proxy_qualities: [1.0, 0.9, 0.7, 0.5, 0.0]
+  surrogate_label_permutations: 99
+  surrogate_trials_per_subject: 1000
+
+execution_policy:
+  automatic_run: false
+  reason: "Expected to exceed 30 CPU minutes; estimate first and run only with explicit authorization."

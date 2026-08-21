@@ -1,0 +1,68 @@
+name: smoke
+output_dir: results/smoke
+seeds: [101, 202, 303, 404, 505]
+null_calibration_seeds:
+  start: 9001
+  count: 40
+
+exact:
+  sample_sizes: [100, 328, 1000]
+
+dimension_benchmark:
+  dimensions: [1, 2, 4]
+  sample_size: 600
+  k_fraction: 0.10
+
+sample_size_benchmark:
+  sample_sizes: [100, 328, 1000]
+  worlds: ["null", genuine_cortical]
+  window: post
+  n_subjects: 1
+
+causal:
+  seeds: [101, 202, 303, 404, 505]
+  worlds:
+    - "null"
+    - redundant
+    - genuine_cortical
+    - artifact_only
+    - cortical_plus_artifact
+  windows: [pre, post]
+  generator:
+    target_name: intended_grasp_type
+    n_grasp_types: 4
+    n_subjects: 3
+    trials_per_subject: 64
+    blocks_per_subject: 4
+    eeg_channels: 6
+    emg_channels: 5
+    band_labels: [low, mu, beta, high]
+    mode: debug
+    default_proxy_quality: 0.7
+    pre_emg_fraction: 0.05
+    pre_artifact_fraction: 0.10
+  oracle:
+    precision_bits: 0.012
+    min_samples: 4000
+    max_samples: 12000
+    batch_size: 4000
+  decoder:
+    outer_splits: 3
+    inner_splits: 2
+    c_grid: [0.1, 1.0]
+  direct_eeg_dimensions: 6
+  direct_emg_dimensions: 3
+  mixed_k_fraction: 0.10
+
+controls:
+  honesty_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  degradation_worlds: [artifact_only, genuine_cortical]
+  proxy_worlds: [artifact_only, cortical_plus_artifact]
+  richness_worlds: [redundant, cortical_plus_artifact]
+  montage_band_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  surrogate_worlds: [artifact_only, genuine_cortical, cortical_plus_artifact]
+  default_proxy_quality: 0.7
+  degradation_levels: [1.0, 0.5, 0.0]
+  proxy_qualities: [1.0, 0.7, 0.0]
+  surrogate_label_permutations: 5
+  surrogate_trials_per_subject: 512
