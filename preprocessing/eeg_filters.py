@@ -78,3 +78,49 @@ def bandpass_filter(
         verbose=False,
     )
     return filtered
+
+def surface_laplacian(
+    raw: mne.io.BaseRaw,
+    lambda2: float = 1e-5,
+    stiffness: int = 4,
+    picks: list | None = None,
+) -> mne.io.BaseRaw:
+    """
+    Surface Laplacian (current source density) spatial filter, per the
+    E3-A protocol doc's pipeline step 4 ("Clean the signal: spatial
+    filter (surface Laplacian) ... No ICA required").
+
+    Wraps mne.preprocessing.compute_current_source_density -- this is
+    Track A's single implementation of "surface Laplacian" (per
+    S8.1/S0.1: no local reimplementations of a shared preprocessing
+    step). Requires channel positions (a montage) to already be set on
+    `raw`; data/way_eeg_gal.py's loader is responsible for attaching
+    the montage before this is called, same as it is for
+    bandpass_filter's channel picks.
+
+    Args:
+        raw: mne Raw object with a montage set. Modified via .copy().
+        lambda2: regularization parameter (mne default 1e-5).
+        stiffness: spline stiffness (mne default 4).
+        picks: channels to include. Defaults to all EEG channels.
+
+    Returns:
+        A new Raw object, spatially filtered. Units change from V to
+        V/m^2 (mne's CSD convention) -- log this if downstream
+        amplitude thresholds (preprocessing/eeg_artifacts.py) are
+        compared against raw-EEG-scale values.
+    """
+    if raw.get_montage() is None:
+        raise ValueError(
+            "surface_laplacian requires a montage (channel positions) "
+            "to be set on `raw` before calling this -- the loader "
+            "(data/way_eeg_gal.py) must attach one. Refusing to run "
+            "with an undefined spatial filter rather than silently "
+            "falling back to a nearest-neighbor approximation."
+        )
+    filtered = raw.copy()
+    if picks is not None:
+        filtered.pick(picks)
+    return mne.preprocessing.compute_current_source_density(
+        filtered, lambda2=lambda2, stiffness=stiffness, copy=False
+    )

@@ -1,0 +1,75 @@
+# experiments/e3a_anticipation.yaml
+# E3-A orchestration config (protocol doc; S8.6: config-as-code, committed before run).
+
+pre_registration_id: PR-2026-02
+
+data:
+  loader: data.way_eeg_gal
+  data_dir: data/raw/way_eeg_gal
+  participants: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+  version_hash: null            # filled at run time from data.way_eeg_gal.compute_dataset_hash
+
+onset:
+  threshold_sd: 3.0
+  baseline_window_s: [0.0, 1.0]
+  smooth_window_s: 0.05
+  n_hand_verify_trials: 30      # protocol doc: "Manually check at least 30 trials"
+
+preprocessing:
+  mrcp_band_hz: [0.3, 3.0]      # fixed by protocol doc -- not paper-dependent
+  filter_order: 4
+  laplacian_lambda2: 1.0e-5
+  rejection:
+    amplitude_uv: 100.0
+    kurtosis_z: 5.0
+
+windowing:
+  window_s: 0.5
+  step_s: 0.05
+  horizon_s: 1.5                # "movement coming" horizon before onset
+  rest_margin_s: 2.0
+
+detectors:
+  # Both run with equal tuning budgets (protocol doc pipeline step 5).
+  slda:
+    shrinkage: auto
+  eegnet:
+    f1: 8
+    d: 2
+    f2: 16
+    kernel_length: 64
+    dropout: 0.5
+    lr: 0.001
+    weight_decay: 0.0001
+    max_epochs: 100
+    batch_size: 32
+    patience: 10
+  tuning_budget: 20               # equal inner-fold search budget, both families
+
+split:
+  policy: session_wise            # per eval/splits.py -- block-wise, never window-level
+
+controls:
+  time_reversed: true
+  shuffled_onset:
+    n_surrogates: 1000
+    min_onset_s: 2.0
+    max_onset_s: null             # filled per-recording length at run time
+  pre_baseline_shift:
+    exclude_pre_onset_s: 3.0
+
+evaluation:
+  n_thresholds: 50
+  n_bootstrap_resamples: 1000     # floor per manual S5.1, eval/stats.bootstrap_ci enforces this
+  ci_percent: 95.0
+
+seed: 42
+
+logging:
+  level: INFO
+  out_dir: results/PR-2026-02/logs
+
+outputs:
+  raw_dir: results/PR-2026-02/raw
+  figure_e3a1_path: results/PR-2026-02/figure.png
+  figure_e3a3_surrogate_path: results/PR-2026-02/fig_surrogate_panel.png
