@@ -16,7 +16,7 @@ preprocessing:
   baseline_window_s: null     # pre-reg doesn't specify baseline correction
 
 features:
-  family: csp                 # csp | riemann
+  family: riemann                # csp | riemann
   csp:
     n_components: 4
     reg: ledoit_wolf
